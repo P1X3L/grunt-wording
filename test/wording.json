@@ -1,8 +1,22 @@
 {
+  "mutual": {
+    "cancel": "",
+    "restart": ""
+  },
   "test": {
     "templates": {
-      "block": {
-        "light": {}
+      "file": {
+        "message1": "",
+        "message2": "",
+        "message3": ""
+      },
+      "tester": {
+        "message1": "",
+        "message2": "",
+        "message3": "",
+        "message4": "",
+        "message5": "",
+        "message6": ""
       }
     }
   }
