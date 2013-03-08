@@ -64,7 +64,7 @@ module.exports = function(grunt) {
     function template(filepath) {
       var fileContent = grunt.file.read(filepath);
 
-      var keys = getFileKeys(fileContent);
+      var keys = getFileKeys(fileContent).sort();
 
       var getExtension = path.extname(filepath);
       var removeExtension = filepath.replace(getExtension, '');
@@ -116,7 +116,7 @@ module.exports = function(grunt) {
     // Iterate over all specified file groups.
     this.files.forEach(function(f) {
       // Concat specified files.
-      var src = f.src.filter(function(filepath) {
+      var src = f.src.sort().filter(function(filepath) {
         // Warn on and remove invalid source files (if nonull was set).
         if (!grunt.file.exists(filepath)) {
           grunt.log.warn('Source file "' + filepath + '" not found.');
