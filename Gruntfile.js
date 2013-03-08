@@ -30,10 +30,16 @@ module.exports = function(grunt) {
 
     // Configuration to be run (and then tested).
     wording: {
-      src: [
-        'test/templates/**/*.ejs',
-        'test/templates/*.js'
-      ]
+      compiled: {
+        src: [
+          'test/templates/**/*.ejs',
+          'test/templates/*.js'
+        ],
+        dest: 'tmp',
+        options: {
+          rootPapayawhip: 1
+        }
+      }
     },
 
     // Unit tests.

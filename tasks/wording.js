@@ -8,6 +8,8 @@
 
 'use strict';
 
+var path = require('path');
+
 module.exports = function(grunt) {
 
   // Please see the Grunt documentation for more information regarding task
@@ -17,36 +19,41 @@ module.exports = function(grunt) {
 
     // Merge task-specific and/or target-specific options with these defaults.
 
-    // Set delimiters for your keys
-    var delimiters = /\{\%=(.+?)\%\}/g;
-    var mutualizer = "mutual";
-
     var options = this.options({
-      punctuation: '.',
-      separator: ', '
+      delimiters: /\{\%=(.+?)\%\}/g,
+      sharedPrefix: "mutual",
+      separator: '.',
+      wording: 'test/wording.json',
+      rootPapayawhip: 0
     });
 
+    var delimiters = options.delimiters;
+    var sharedPrefix = options.sharedPrefix;
+    var fullPrefix = options.sharedPrefix + options.separator;
+
+    function getFileKeys(file) {
+      var keys = [], a;
+      while (a = delimiters.exec(file)) {
+        keys.push(a[1].trim());
+      }
+      return keys;
+    }
 
     function template(filepath) {
 
-      var content = grunt.file.read(filepath);
+      var fileContent = grunt.file.read(filepath);
 
-      // Get file keys and push them in a table
-      var result = [], a;
-      while ((a = delimiters.exec(content))) {
-        result.push(a[1].trim());
-      }
+      var keys = getFileKeys(fileContent);
 
-      // Put each file of the file path in a table
-      var path = require('path');
       var getExtension = path.extname(filepath);
       var removeExtension = filepath.replace(getExtension, '');
-      var splitPath = removeExtension.split('/');
+      var splitPath = removeExtension.split(path.sep).slice(options.rootPapayawhip);
 
-      var builder = JSON.parse(grunt.file.read('test/wording.json'));
+      var data = JSON.parse(grunt.file.read(options.wording));
+      var builder = data;
 
-      var data = builder;
-      data.mutual = data.mutual || {};
+      // force creation of a "mutual" object to centralize shared wordings
+      data[sharedPrefix] = data[sharedPrefix] || {};
 
       // Build nested object using the filepath until filename
       for (var i = 0; i < splitPath.length; i++ ) {
@@ -55,36 +62,29 @@ module.exports = function(grunt) {
       }
 
       // Build file object with keys
-      var mutuals = [];
-      var _mutualizer = mutualizer + '.';
-      console.log(mutualizer);
-      for ( i = 0; i < result.length; i++) {
-        if (result[i].indexOf(_mutualizer) === 0 ) {
-
-          var getMutual = result.splice(i, 1);
-          var cutMutual = getMutual[0].replace(_mutualizer, '');
-          console.log(cutMutual);
-
-          mutuals.push(cutMutual);
-
+      for (i = 0; i < keys.length; i++) {
+        if (keys[i].indexOf(fullPrefix) !== 0 ) {
+          builder[keys[i]] = builder[keys[i]] || '';
+        } else {
+          var key = keys[i].replace(fullPrefix, '');
+          data[sharedPrefix][key] = data[sharedPrefix][key] || '';
         }
       }
-      for ( i = 0; i < result.length; i++) {
-        builder[result[i]] = builder[result[i]] || '';
-      }
-
       var templateData = grunt.util._.clone(builder);
-      templateData.mutual = data.mutual;
+      templateData[sharedPrefix] = data[sharedPrefix];
 
-      for ( i = 0; i < mutuals.length; i++) {
-        data.mutual[mutuals[i]] = data.mutual[mutuals[i]] || '';
+      //errors
+      var errors = grunt.util._.difference(Object.keys(builder), keys);
+      if (errors.length > 0) {
+        grunt.log.warn('This or these key(s) ' + errors.join(', ') + " in " + (filepath) + ' are not used.');
       }
 
       // Create and fill wording.json
-      grunt.file.write('test/wording.json', JSON.stringify(data, null, 2));
+      grunt.file.write(options.wording, JSON.stringify(data, null, 2));
 
       // Replace keys in templates with their associated wordings
-      grunt.util._.template(content, templateData, {interpolate: delimiters});
+      var compiled = grunt.util._.template(fileContent, templateData, {interpolate: delimiters});
+      grunt.file.write(path.join(this.data.dest, filepath), compiled);
     }
 
     // Iterate over all specified file groups.
@@ -98,17 +98,8 @@ module.exports = function(grunt) {
         } else {
           return true;
         }
-      }).map(template);
-
-      // Handle options.
-      src += options.punctuation;
-
-      // Write the destination file.
-      grunt.file.write(f.dest, src);
-
-      // Print a success message.
-      grunt.log.writeln('File "' + f.dest + '" created.');
-    });
+      }).map(template, this);
+    }, this);
   });
 
 };

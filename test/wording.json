@@ -3,21 +3,19 @@
     "cancel": "",
     "restart": ""
   },
-  "test": {
-    "templates": {
-      "file": {
-        "message1": "",
-        "message2": "",
-        "message3": ""
-      },
-      "tester": {
-        "message1": "",
-        "message2": "",
-        "message3": "",
-        "message4": "",
-        "message5": "",
-        "message6": ""
-      }
+  "templates": {
+    "file": {
+      "message1": "",
+      "messageun": "",
+      "messagepour": ""
+    },
+    "tester": {
+      "message1": "",
+      "message2": "",
+      "message3": "",
+      "message4": "",
+      "message5": "",
+      "message6": ""
     }
   }
 }
