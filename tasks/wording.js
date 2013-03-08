@@ -20,7 +20,7 @@ module.exports = function(grunt) {
     // Merge task-specific and/or target-specific options with these defaults.
 
     var options = this.options({
-      delimiters: /\{\%=(.+?)\%\}/g,
+      delimiters: ['{%','%}'],
       sharedPrefix: "mutual",
       separator: '.',
       wording: 'test/wording.json',
@@ -31,16 +31,26 @@ module.exports = function(grunt) {
     var sharedPrefix = options.sharedPrefix;
     var fullPrefix = options.sharedPrefix + options.separator;
 
+    // Generate RegExp patterns dynamically.
+    var a = delimiters[0].replace(/(.)/g, '\\$1');
+    var b = '([\\s\\S]+?)' + delimiters[1].replace(/(.)/g, '\\$1');
+    var templateSettings = {
+      evaluate: new RegExp(a + b, 'g'),
+      interpolate: new RegExp(a + '=' + b, 'g'),
+      escape: new RegExp(a + '-' + b, 'g')
+    };
+
+    var interpolate = templateSettings.interpolate;
+
     function getFileKeys(file) {
       var keys = [], a;
-      while (a = delimiters.exec(file)) {
+      while (a = interpolate.exec(file)) {
         keys.push(a[1].trim());
       }
       return keys;
     }
 
     function template(filepath) {
-
       var fileContent = grunt.file.read(filepath);
 
       var keys = getFileKeys(fileContent);
@@ -83,7 +93,7 @@ module.exports = function(grunt) {
       grunt.file.write(options.wording, JSON.stringify(data, null, 2));
 
       // Replace keys in templates with their associated wordings
-      var compiled = grunt.util._.template(fileContent, templateData, {interpolate: delimiters});
+      var compiled = grunt.util._.template(fileContent, templateData, templateSettings);
       grunt.file.write(path.join(this.data.dest, filepath), compiled);
     }
 
