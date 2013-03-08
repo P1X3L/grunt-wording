@@ -42,6 +42,17 @@ module.exports = function(grunt) {
 
     var interpolate = templateSettings.interpolate;
 
+    function isEmptyFile(filepath) {
+      return grunt.file.read(filepath).trim().length === 0;
+    }
+
+    var data;
+    if (!grunt.file.exists(options.wording) || isEmptyFile(options.wording)) {
+      data = {};
+    } else {
+      data = JSON.parse(grunt.file.read(options.wording));
+    }
+
     function getFileKeys(file) {
       var keys = [], a;
       while (a = interpolate.exec(file)) {
@@ -59,7 +70,6 @@ module.exports = function(grunt) {
       var removeExtension = filepath.replace(getExtension, '');
       var splitPath = removeExtension.split(path.sep).slice(options.rootPapayawhip);
 
-      var data = JSON.parse(grunt.file.read(options.wording));
       var builder = data;
 
       // force creation of a "mutual" object to centralize shared wordings
@@ -93,8 +103,14 @@ module.exports = function(grunt) {
       grunt.file.write(options.wording, JSON.stringify(data, null, 2));
 
       // Replace keys in templates with their associated wordings
-      var compiled = grunt.util._.template(fileContent, templateData, templateSettings);
-      grunt.file.write(path.join(this.data.dest, filepath), compiled);
+      try {
+        var compiled = grunt.util._.template(fileContent, templateData, templateSettings);
+        grunt.file.write(path.join(this.data.dest, filepath), compiled);
+      }
+      catch (e) {
+        grunt.log.warn('Error while templating ' + filepath);
+        grunt.log.warn(e);
+      }
     }
 
     // Iterate over all specified file groups.
@@ -104,6 +120,14 @@ module.exports = function(grunt) {
         // Warn on and remove invalid source files (if nonull was set).
         if (!grunt.file.exists(filepath)) {
           grunt.log.warn('Source file "' + filepath + '" not found.');
+          return false;
+        } else {
+          return true;
+        }
+      }).filter(function(filepath){
+        var fileContent = grunt.file.read(filepath);
+        var keys = getFileKeys(fileContent);
+        if(keys.length === 0) {
           return false;
         } else {
           return true;
