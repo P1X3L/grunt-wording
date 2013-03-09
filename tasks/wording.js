@@ -11,129 +11,128 @@
 var path = require('path');
 
 module.exports = function(grunt) {
+  var _ = grunt.util._,
+      options,
+      data,
+      shared,
+      fullPrefix;
 
-  // Please see the Grunt documentation for more information regarding task
-  // creation: http://gruntjs.com/creating-tasks
+  function isEmptyFile(filePath) {
+    return !grunt.file.exists(filePath) || !grunt.file.read(filePath).trim().length;
+  }
+
+  function hasWording(fileContent) {
+    return (getFileKeys(fileContent).filter(function(key) {
+      return (key.indexOf(fullPrefix) !== 0);
+    }).length > 0);
+  }
+
+  function getFileKeys(fileContent) {
+    var keys = [], a;
+    while (a = _.templateSettings.interpolate.exec(fileContent)) {
+      keys.push(a[1].trim());
+    }
+    return keys.sort();
+  }
+
+  function createWording(filePath, fileContent) {
+    var keys = getFileKeys(fileContent);
+    var removeExtension = filePath.replace(path.extname(filePath), '');
+    var splitPath = removeExtension.split(path.sep).slice(options.rootPapayawhip);
+
+    // Build nested object using the filepath until filename
+    var builder = data;
+    splitPath.forEach(function(dir) {
+      if (!builder[dir]) {
+        builder[dir] = {};
+        grunt.log.ok('Add file or directory ' + dir);
+      }
+      builder = builder[dir];
+    });
+
+    // Build file object with keys
+    var created = [];
+    keys.forEach(function(key) {
+      if (key.indexOf(fullPrefix) !== 0) {
+        if (typeof builder[key] !== 'undefined') { return; }
+        builder[key] = '';
+        created.push(key);
+      } else {
+        key = key.replace(fullPrefix, '');
+        if (typeof shared[key] !== 'undefined') { return; }
+        shared[key] = '';
+        created.push(fullPrefix + key);
+      }
+    });
+
+    // Non used keys
+    var diff = _.difference(Object.keys(builder), keys);
+    if (diff.length > 0) {
+      grunt.log.errorlns('Unused key(s) ' + grunt.log.wordlist(diff, { color: 'red' }) + ' for ' + filePath);
+    }
+
+    // Created keys
+    if (created.length > 0) {
+      grunt.log.oklns('Created key(s) ' + grunt.log.wordlist(created, { color: 'green' }) + ' for ' + filePath);
+    }
+
+    if (created.length || diff.length) {
+      grunt.log.writeln();
+    }
+
+    return _.clone(builder);
+  }
+
+  function template(filePath) {
+    var fileContent = grunt.file.read(filePath);
+    // Replace keys in templates with their associated wordings
+    try {
+      var templateData = hasWording(fileContent) ? createWording(filePath, fileContent) : {};
+      templateData[options.sharedPrefix] = shared;
+
+      var compiled = _.template(fileContent, templateData);
+      var dest = path.join(this.data.dest, filePath);
+
+      grunt.verbose.write('Creating template ' + dest + '...');
+      grunt.file.write(dest, compiled);
+      grunt.verbose.ok();
+    } catch (e) {
+      grunt.verbose.error();
+      grunt.log.errorlns(e);
+      grunt.fail.warn('Error while templating ' + filePath);
+    }
+  }
 
   grunt.registerMultiTask('wording', 'Create your wording translations file', function() {
-
-    // Merge task-specific and/or target-specific options with these defaults.
-
-    var options = this.options({
-      delimiters: ['{%','%}'],
-      sharedPrefix: "mutual",
-      separator: '.',
-      wording: 'test/wording.json',
+    options = this.options({
+      delimiters: 'config',
+      sharedPrefix: 'mutual',
+      wording: 'wording/wording.json',
       rootPapayawhip: 0
     });
 
-    var delimiters = options.delimiters;
-    var sharedPrefix = options.sharedPrefix;
-    var fullPrefix = options.sharedPrefix + options.separator;
+    grunt.template.setDelimiters(options.delimiters);
 
-    // Generate RegExp patterns dynamically.
-    var a = delimiters[0].replace(/(.)/g, '\\$1');
-    var b = '([\\s\\S]+?)' + delimiters[1].replace(/(.)/g, '\\$1');
-    var templateSettings = {
-      evaluate: new RegExp(a + b, 'g'),
-      interpolate: new RegExp(a + '=' + b, 'g'),
-      escape: new RegExp(a + '-' + b, 'g')
-    };
-
-    var interpolate = templateSettings.interpolate;
-
-    function isEmptyFile(filepath) {
-      return grunt.file.read(filepath).trim().length === 0;
-    }
-
-    var data;
-    if (!grunt.file.exists(options.wording) || isEmptyFile(options.wording)) {
+    if (isEmptyFile(options.wording)) {
       data = {};
     } else {
       data = JSON.parse(grunt.file.read(options.wording));
     }
 
-    function getFileKeys(file) {
-      var keys = [], a;
-      while (a = interpolate.exec(file)) {
-        keys.push(a[1].trim());
-      }
-      return keys;
-    }
+    // full prefix with a dot at the end (i.e. "mutual.")
+    fullPrefix = options.sharedPrefix + '.';
 
-    function template(filepath) {
-      var fileContent = grunt.file.read(filepath);
-
-      var keys = getFileKeys(fileContent).sort();
-
-      var getExtension = path.extname(filepath);
-      var removeExtension = filepath.replace(getExtension, '');
-      var splitPath = removeExtension.split(path.sep).slice(options.rootPapayawhip);
-
-      var builder = data;
-
-      // force creation of a "mutual" object to centralize shared wordings
-      data[sharedPrefix] = data[sharedPrefix] || {};
-
-      // Build nested object using the filepath until filename
-      for (var i = 0; i < splitPath.length; i++ ) {
-        builder[splitPath[i]] = builder[splitPath[i]] || {};
-        builder = builder[splitPath[i]];
-      }
-
-      // Build file object with keys
-      for (i = 0; i < keys.length; i++) {
-        if (keys[i].indexOf(fullPrefix) !== 0 ) {
-          builder[keys[i]] = builder[keys[i]] || '';
-        } else {
-          var key = keys[i].replace(fullPrefix, '');
-          data[sharedPrefix][key] = data[sharedPrefix][key] || '';
-        }
-      }
-      var templateData = grunt.util._.clone(builder);
-      templateData[sharedPrefix] = data[sharedPrefix];
-
-      //errors
-      var errors = grunt.util._.difference(Object.keys(builder), keys);
-      if (errors.length > 0) {
-        grunt.log.warn('This or these key(s) ' + errors.join(', ') + " in " + (filepath) + ' are not used.');
-      }
-
-      // Create and fill wording.json
-      grunt.file.write(options.wording, JSON.stringify(data, null, 2));
-
-      // Replace keys in templates with their associated wordings
-      try {
-        var compiled = grunt.util._.template(fileContent, templateData, templateSettings);
-        grunt.file.write(path.join(this.data.dest, filepath), compiled);
-      }
-      catch (e) {
-        grunt.log.warn('Error while templating ' + filepath);
-        grunt.log.warn(e);
-      }
-    }
+    // force creation of a "mutual" object to centralize shared wordings
+    shared = data[options.sharedPrefix] = data[options.sharedPrefix] || {};
 
     // Iterate over all specified file groups.
-    this.files.forEach(function(f) {
-      // Concat specified files.
-      var src = f.src.sort().filter(function(filepath) {
-        // Warn on and remove invalid source files (if nonull was set).
-        if (!grunt.file.exists(filepath)) {
-          grunt.log.warn('Source file "' + filepath + '" not found.');
-          return false;
-        } else {
-          return true;
-        }
-      }).filter(function(filepath){
-        var fileContent = grunt.file.read(filepath);
-        var keys = getFileKeys(fileContent);
-        if(keys.length === 0) {
-          return false;
-        } else {
-          return true;
-        }
-      }).map(template, this);
+    this.files.forEach(function(file) {
+      file.src.sort().map(template, this);
     }, this);
-  });
 
+    // Create and fill wording.json
+    grunt.log.write('Writing ' + options.wording + '...')
+    grunt.file.write(options.wording, JSON.stringify(data, null, 2));
+    grunt.log.ok();
+  });
 };
