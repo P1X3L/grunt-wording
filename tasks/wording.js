@@ -1,6 +1,6 @@
 /*
  * grunt-wording
- * https://github.com/pix/grunt-contrib-wording
+ * https://github.com/P1X3L/grunt-wording
  *
  * Copyright (c) 2013 pxceccaldi
  * Licensed under the MIT license.

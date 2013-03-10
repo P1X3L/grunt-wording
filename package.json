@@ -2,22 +2,22 @@
   "name": "grunt-wording",
   "description": "The best Grunt plugin ever.",
   "version": "0.1.0",
-  "homepage": "https://github.com/pix/grunt-contrib-wording",
+  "homepage": "https://github.com/P1X3L/grunt-wording",
   "author": {
     "name": "pxceccaldi",
     "email": "pxceccaldi@af83.com"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/pix/grunt-contrib-wording.git"
+    "url": "git://github.com/pix/grunt-wording.git"
   },
   "bugs": {
-    "url": "https://github.com/pix/grunt-contrib-wording/issues"
+    "url": "https://github.com/P1X3L/grunt-wording/issues"
   },
   "licenses": [
     {
       "type": "MIT",
-      "url": "https://github.com/pix/grunt-contrib-wording/blob/master/LICENSE-MIT"
+      "url": "https://github.com/P1X3L/grunt-wording/blob/master/LICENSE-MIT"
     }
   ],
   "main": "Gruntfile.js",
