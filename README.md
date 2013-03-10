@@ -1,6 +1,6 @@
 # grunt-wording
 
-> The best Grunt plugin ever.
+> A grunt plugin to help you auto generate wordings in your application.
 
 ## Getting Started
 This plugin requires Grunt `~0.4.0`
@@ -25,29 +25,52 @@ In your project's Gruntfile, add a section named `wording` to the data object pa
 ```js
 grunt.initConfig({
   wording: {
-    options: {
-      // Task-specific options go here.
-    },
-    your_target: {
-      // Target-specific file lists and/or options go here.
-    },
+    compiled {
+      options: {
+        // Task-specific options go here.
+      },
+      src: [// Add the paths to the files you want the grunt-wording plugin to treat ],
+      dest: // Destination of compiled files goes here.
+    }
   },
 })
 ```
 
 ### Options
 
+#### options.delimiters
+Type: Table
+Default value: ['{%', '%}']
+
+A table that is used to set your opening and closing delimiters to add a
+wording key in your file.
+
+#### options.sharedPrefix
+Type: `String`
+Default value: `mutual`
+
+A string that is used to set a prefix in your wording key to deal with
+the repeated wordings in your app.
+
 #### options.separator
 Type: `String`
-Default value: `',  '`
+Default value: `.`
 
-A string value that is used to do something with whatever.
+A string that is used to separate the sharedPrefix from your wording
+key.
 
-#### options.punctuation
+#### options.wording
 Type: `String`
-Default value: `'.'`
 
-A string value that is used to do something else with whatever else.
+!! WARNING !! This isn't an option, it is a REQUIRED value. It is the path you want your wording.json to be generated.
+
+
+#### options.rootPapayawhip
+Type: Integer
+Default value: 0
+
+
+
 
 ### Usage Examples
 
