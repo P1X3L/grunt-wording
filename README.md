@@ -40,10 +40,15 @@ grunt.initConfig({
 
 #### options.delimiters
 Type: Table
-Default value: ['{%', '%}']
+Default value: 'config'
 
-A table that is used to set your opening and closing delimiters to add a
-wording key in your file.
+It is possible to specify the delimiters for your wording by using the `grunt.template.addDelimiters` method. For instance by specifying a `wording` delimiter and using it in your options.
+
+```js
+grunt.template.addDelimiters('wording', '{%', '%}');
+```
+
+The default delimiters are called `config` : `<% %>`
 
 #### options.sharedPrefix
 Type: `String`
