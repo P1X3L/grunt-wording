@@ -132,7 +132,7 @@ module.exports = function(grunt) {
 
     // Create and fill wording.json
     grunt.log.write('Writing ' + options.wording + '...')
-    grunt.file.write(options.wording, JSON.stringify(data, null, 2));
+    grunt.file.write(options.wording, JSON.stringify(data, null, 2) + '\n');
     grunt.log.ok();
   });
 };
