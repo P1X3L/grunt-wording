@@ -66,7 +66,9 @@ module.exports = function(grunt) {
     });
 
     // Non used keys
-    var diff = _.difference(Object.keys(builder), keys);
+    var diff = _.difference(Object.keys(builder), keys).filter(function(key) {
+      return typeof builder[key] === 'string';
+    });
     if (diff.length > 0) {
       grunt.log.errorlns('Unused key(s) ' + grunt.log.wordlist(diff, { color: 'red' }) + ' for ' + filePath);
     }
