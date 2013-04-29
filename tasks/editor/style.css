@@ -1,0 +1,103 @@
+#webapp {
+  position: absolute;
+  width: 80%;
+  right: 0;
+}
+#webapp .choice0-message,
+#webapp .choice1-message,
+#webapp .choice2-message,
+#webapp .choice3-message,
+#webapp .choice4-message {
+  display: block;
+}
+#templates-menu {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  padding-top: 40px;
+  width: 20%;
+  background-color: rgba(204, 204, 204, 0.2);
+}
+#templates-menu button {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: #ccc;
+  font-size: 1em;
+  cursor: pointer;
+  border: 3px solid #999;
+  background-color: #333;
+}
+#templates-menu button:hover {
+  border-color: white;
+  -webkit-transition: border-color 300ms ease;
+}
+#templates-menu button:active {
+  border-color: #999;
+}
+#templates-menu ul {
+  height: 100%;
+  padding: 0 5px;
+  overflow: auto;
+}
+#templates-menu li {
+  padding: 1px;
+  cursor: hand;
+  cursor: pointer;
+  color: #fafafa;
+  text-decoration: none;
+  font-family: sans-serif;
+}
+#templates-menu li:hover {
+  background-color: #fafafa;
+  color: #333;
+  text-decoration: none;
+}
+#templates-menu li.focus {
+  background-color: #fafafa;
+  color: #333;
+}
+
+a[data-key]:hover {
+  background-color: white;
+  color: black;
+  cursor: pointer;
+}
+a[contenteditable]:empty {
+  display: block;
+  width: 100%;
+  height: 25px;
+  border: 3px dashed rgb(204, 204, 204);
+  background-color: rgb(51, 51, 51);
+}
+
+#templates {
+  color: white;
+}
+
+#ejs-warning {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30px;
+  padding-top: 10px;
+  text-align: center;
+  color: white;
+  font-family: sans-serif;
+  background-color: red;
+}
+
+#main.shutdown p::before,
+#main.wakeup p::before,
+#main .menu::after,
+#main #zapbande::after,
+.settings > article::after {
+  content: none;
+}
+
+select {
+  display: block;
+}
