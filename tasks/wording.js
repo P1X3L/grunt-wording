@@ -15,7 +15,9 @@ module.exports = function(grunt) {
       options,
       data,
       shared,
-      fullPrefix;
+      fullPrefix,
+      originalPaths = [],
+      jsonPaths;
 
   function isEmptyFile(filePath) {
     return !grunt.file.exists(filePath) || !grunt.file.read(filePath).trim().length;
@@ -106,6 +108,20 @@ module.exports = function(grunt) {
   }
 
   grunt.registerMultiTask('wording', 'Create your wording translations file', function() {
+
+    function getPathsFromData(obj, previousPath, accumulator) {
+      accumulator = accumulator || {};
+      var begining = previousPath.length === 0;
+      for (var key in obj) {
+        if (typeof obj[key] === 'string') {
+          accumulator[previousPath] = true;
+          continue;
+        }
+        getPathsFromData(obj[key], previousPath + (begining ? '' : '/') + key, accumulator);
+      }
+      return accumulator;
+    }
+
     options = this.options({
       delimiters: 'config',
       sharedPrefix: 'mutual',
@@ -119,6 +135,11 @@ module.exports = function(grunt) {
       data = {};
     } else {
       data = JSON.parse(grunt.file.read(options.wording));
+
+      jsonPaths = getPathsFromData(data, '');
+      delete jsonPaths[options.sharedPrefix];
+      delete jsonPaths.webapp;
+      jsonPaths = Object.keys(jsonPaths);
     }
 
     // full prefix with a dot at the end (i.e. "mutual.")
@@ -131,6 +152,22 @@ module.exports = function(grunt) {
     this.files.forEach(function(file) {
       file.src.sort().map(template, this);
     }, this);
+
+   /*
+    * Warn if an object becomes useless because its
+    * original path does not exist (deleted or renamed file)
+    */
+    var inexistantPaths = _.difference(jsonPaths, originalPaths);
+    for (var i = 0; i < inexistantPaths.length; i++) {
+      var unusedObject = path.basename(inexistantPaths[i]);
+      inexistantPaths[i] = path.dirname(inexistantPaths[i]).replace(/\//g, '.');
+      grunt.log.errorlns(
+        'Unused object ' +
+        grunt.log.wordlist([unusedObject], {color: 'cyan'}) +
+        ' in wording.json at ' +
+        grunt.log.wordlist([inexistantPaths[i]], {color: 'red'})
+      );
+    }
 
     // Create and fill wording.json
     grunt.log.write('Writing ' + options.wording + '...');
