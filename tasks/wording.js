@@ -37,14 +37,25 @@ module.exports = function(grunt) {
     return keys.sort();
   }
 
+  /*
+   * returns a table from a path. For example :
+   * "app/template/file.ejs" returns ['app', 'template', 'file']
+   */
+  function noExtensionPath(filePath) {
+    return filePath.replace(path.extname(filePath), '').split(path.sep);
+  }
+
+  function cutPath(filePath) {
+    return noExtensionPath(filePath).slice(options.rootPapayawhip);
+  }
+
   function createWording(filePath, fileContent) {
-    var keys = getFileKeys(fileContent);
-    var removeExtension = filePath.replace(path.extname(filePath), '');
-    var splitPath = removeExtension.split(path.sep).slice(options.rootPapayawhip);
+    var keys       = getFileKeys(fileContent),
+        usablePath = cutPath(filePath);
 
     // Build nested object using the filepath until filename
     var builder = data;
-    splitPath.forEach(function(dir) {
+    usablePath.forEach(function(dir) {
       if (!builder[dir]) {
         builder[dir] = {};
         grunt.log.ok('Add file or directory ' + dir);
