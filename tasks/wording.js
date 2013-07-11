@@ -105,8 +105,29 @@ module.exports = function(grunt) {
       var templateData = hasWording(fileContent) ? createWording(filePath, fileContent) : {};
       templateData[options.sharedPrefix] = shared;
 
-      var compiled = _.template(fileContent, templateData);
-      var dest = path.join(this.data.dest, filePath);
+      var compiled  = _.template(fileContent, templateData),
+          dest      = path.join(this.data.dest, filePath),
+          noKeyFile = !hasWording(fileContent) && filePath;
+
+      originalPaths.push(cutPath(filePath).join('/'));
+      if (noKeyFile) {
+        var emptyKeyFilePath = cutPath(noKeyFile);
+      }
+
+      if (emptyKeyFilePath) {
+        var unusedKey = data;
+        for (var i = 0; i < emptyKeyFilePath.length; i++) {
+          unusedKey = unusedKey[emptyKeyFilePath[i]];
+          if (!unusedKey) { break; }
+        }
+        if (unusedKey) {
+          grunt.log.errorlns(
+            'Unused key(s) ' +
+            grunt.log.wordlist(Object.keys(unusedKey), { color: 'red' }) +
+            ' for ' + filePath
+          );
+        };
+      }
 
       grunt.verbose.write('Creating template ' + dest + '...');
       grunt.file.write(dest, compiled);
